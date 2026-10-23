@@ -1,0 +1,1012 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Case Schedule Builder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+<style>
+
+  /* ----------------------------------------------------------------
+     DESIGN TOKENS
+     Institutional palette: crimson red -> navy blue, taken from the
+     reference gradient. Red carries primary actions and emphasis;
+     navy carries structure (headers, filled slots). Neutrals stay
+     cool-grey so the two brand colors keep their weight.
+  ---------------------------------------------------------------- */
+  :root {
+    --red-700: #9C1F2E;
+    --red-600: #C1283A;
+    --red-500: #D43B4C;
+    --red-100: #FBE3E6;
+
+    --navy-900: #1C2340;
+    --navy-800: #262F57;
+    --navy-700: #333E73;
+    --navy-100: #E4E6F2;
+
+    --bg: #F3F2F7;
+    --surface: #FFFFFF;
+    --ink: var(--navy-900);
+    --muted: #6B6F8C;
+    --line: #DBD9EA;
+    --cell-empty: #F6F5FA;
+
+    --accent: var(--red-600);
+    --accent-soft: var(--red-100);
+    --structure: var(--navy-800);
+    --structure-soft: var(--navy-100);
+    --ok: #1F7A4D;
+
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11142A;
+      --surface: #1B2040;
+      --ink: #EDEEF7;
+      --muted: #A4A8CC;
+      --line: #313765;
+      --cell-empty: #1F2447;
+      --red-600: #E4495A;
+      --red-100: #3A2130;
+      --navy-800: #4A5590;
+      --navy-100: #262C55;
+      --accent: var(--red-600);
+      --accent-soft: var(--red-100);
+      --structure: #5560A0;
+      --structure-soft: var(--navy-100);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11142A;
+    --surface: #1B2040;
+    --ink: #EDEEF7;
+    --muted: #A4A8CC;
+    --line: #313765;
+    --cell-empty: #1F2447;
+    --red-600: #E4495A;
+    --red-100: #3A2130;
+    --navy-800: #4A5590;
+    --navy-100: #262C55;
+    --accent: var(--red-600);
+    --accent-soft: var(--red-100);
+    --structure: #5560A0;
+    --structure-soft: var(--navy-100);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, var(--red-700) 0%, var(--navy-900) 100%);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  button { font: inherit; cursor: pointer; }
+
+  /* ----------------------------------------------------------------
+     LAYOUT SHELL
+  ---------------------------------------------------------------- */
+  .app {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: clamp(14px, 3vw, 32px);
+  }
+
+ .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.top-logos {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+.top-logos img {
+  display: block;
+  height: clamp(36px, 6vw, 56px);
+  width: auto;
+}
+  .top h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #FFFFFF;
+  }
+  .top p {
+    margin: 4px 0 0;
+    color: #FDF6E8;
+    font-size: 14px;
+  }
+
+  .case {
+    display: grid;
+    grid-template-columns: 288px 1fr;
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 32px;
+  }
+
+  /* ----------------------------------------------------------------
+     POOL (university tiles waiting to be placed)
+  ---------------------------------------------------------------- */
+  .pool {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    padding: 18px;
+    position: sticky;
+    top: 16px;
+  }
+
+  .pool-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-weight: 700;
+  }
+  .pool-head .count {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .progress {
+    height: 6px;
+    border-radius: 99px;
+    background: var(--structure-soft);
+    margin: 10px 0 16px;
+    overflow: hidden;
+  }
+  .progress > i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.25s ease;
+  }
+  .progress.done > i { background: var(--ok); }
+
+  .tile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    min-height: 80px;
+  }
+  .tile-grid .empty-note {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 8px;
+  }
+
+  /* ----------------------------------------------------------------
+     TILES (a single university card, in the pool or placed in a cell)
+  ---------------------------------------------------------------- */
+  .tile {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .tile:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 14px rgba(193, 40, 58, 0.16);
+  }
+  .tile.is-selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent);
+  }
+  .tile.is-lifted { opacity: 0.3; }
+  .tile img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+
+  .tile-monogram {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--structure-soft);
+    color: var(--structure);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .tile-label {
+    font-size: 10.5px;
+    line-height: 1.2;
+    text-align: center;
+    font-weight: 600;
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Small camera/upload icon on every tile — pool AND placed in a
+     cell — so a logo can be set or replaced at any time. It also
+     doubles as the drop target label for a dragged-in image file. */
+  .tile-ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    pointer-events: none;
+    box-shadow: 0 14px 30px rgba(18, 24, 58, 0.3);
+    cursor: grabbing;
+  }
+
+  /* ----------------------------------------------------------------
+     BOARD (the schedule grid itself)
+  ---------------------------------------------------------------- */
+  .board {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    padding: clamp(14px, 3vw, 32px);
+  }
+
+  .board-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: clamp(14px, 2.5vw, 24px);
+  }
+  .board-head h2 {
+    margin: 0;
+    font-size: clamp(22px, 3.6vw, 34px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .board-actions { display: flex; gap: 10px; }
+
+  .btn {
+    border-radius: 12px;
+    padding: 11px 20px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn.btn-primary:hover { filter: brightness(1.08); }
+  .btn:disabled { opacity: 0.6; cursor: wait; }
+
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: clamp(46px, 7vw, 84px) repeat(4, minmax(0, 1fr));
+    gap: clamp(6px, 1.3vw, 14px);
+  }
+
+  .col-header {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    text-align: center;
+    font-weight: 700;
+    font-size: clamp(10px, 1.5vw, 15px);
+    align-self: end;
+  }
+  .col-header .room {
+    background: var(--structure);
+    color: #fff;
+    padding: clamp(7px, 1.2vw, 12px) 4px;
+    line-height: 1.15;
+  }
+  .col-header .division {
+    background: var(--structure-soft);
+    color: var(--structure);
+    padding: clamp(5px, 1vw, 9px) 4px;
+  }
+
+  .row-time {
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: clamp(11px, 1.7vw, 17px);
+  }
+
+  .cell {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border: 2px dashed var(--line);
+    border-radius: var(--radius-md);
+    background: var(--cell-empty);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .cell > b {
+    position: absolute;
+    top: 6px;
+    left: 9px;
+    font-size: clamp(9px, 1.2vw, 12px);
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .cell.is-filled {
+    border-style: solid;
+    background: var(--surface);
+  }
+  .cell.is-filled > b { display: none; }
+  .cell .tile {
+    position: absolute;
+    inset: 4px;
+    aspect-ratio: auto;
+    border-radius: var(--radius-sm);
+    cursor: grab;
+  }
+
+  .cell.is-drop-target,
+  .pool.is-drop-target {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .cell.is-drop-target { border-style: solid; }
+
+  /* ----------------------------------------------------------------
+     CAPTURE PREVIEW DIALOG
+  ---------------------------------------------------------------- */
+  dialog {
+    border: 0;
+    border-radius: 20px;
+    padding: 20px;
+    background: var(--surface);
+    color: var(--ink);
+    width: min(94vw, 1040px);
+  }
+  dialog::backdrop { background: rgba(11, 15, 46, 0.65); }
+  dialog img {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    display: block;
+  }
+  .dialog-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .dialog-note {
+    margin: 0 auto 0 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ----------------------------------------------------------------
+     RESPONSIVE
+  ---------------------------------------------------------------- */
+  @media (max-width: 860px) {
+    .case { grid-template-columns: 1fr; }
+    .pool { position: static; }
+    .tile-grid { grid-template-columns: repeat(4, 1fr); }
+    .tile-label { font-size: 9.5px; }
+    .tile-monogram { width: 26px; height: 26px; font-size: 11px; }
+  }
+  @media (max-width: 560px) {
+    .tile-grid { grid-template-columns: repeat(3, 1fr); }
+    .room small { display: none; }
+    .board-actions { width: 100%; }
+    .board-actions .btn { flex: 1; }
+    .tile-label { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="top">
+  <div>
+    <h1>Schedule builder</h1>
+    <p>Drag each university into a slot, or tap a logo and then tap a slot.</p>
+  </div>
+
+  <div class="top-logos">
+    <img src="logos/bmcc.png" alt="Institution logo 1" onerror="this.style.display='none'">
+    <img src="logos/institucion-2.png" alt="Institution logo 2" onerror="this.style.display='none'">
+  </div>
+</header>
+
+  <!-- First case -->
+  <section class="case" data-case="1" aria-label="First case">
+    <div class="pool" id="pool-1" data-case="1">
+      <div class="pool-head">
+        Universities
+        <span class="count" id="count-1">0 of 12 placed</span>
+      </div>
+      <div class="progress" id="progress-1"><i></i></div>
+      <div class="tile-grid" id="tiles-1"></div>
+    </div>
+
+    <div class="board" id="board-1" data-case="1">
+      <div class="board-head">
+        <h2>First Case</h2>
+        <div class="board-actions">
+          <button class="btn" data-reset="1" type="button">Reset</button>
+          <button class="btn btn-primary" data-capture="1" type="button">Capture schedule</button>
+        </div>
+      </div>
+      <div class="schedule-grid" id="grid-1" data-case="1"></div>
+    </div>
+  </section>
+
+  <!-- Second case -->
+  <section class="case" data-case="2" aria-label="Second case">
+    <div class="pool" id="pool-2" data-case="2">
+      <div class="pool-head">
+        Universities
+        <span class="count" id="count-2">0 of 12 placed</span>
+      </div>
+      <div class="progress" id="progress-2"><i></i></div>
+      <div class="tile-grid" id="tiles-2"></div>
+    </div>
+
+    <div class="board" id="board-2" data-case="2">
+      <div class="board-head">
+        <h2>Second Case</h2>
+        <div class="board-actions">
+          <button class="btn" data-reset="2" type="button">Reset</button>
+          <button class="btn btn-primary" data-capture="2" type="button">Capture schedule</button>
+        </div>
+      </div>
+      <div class="schedule-grid" id="grid-2" data-case="2"></div>
+    </div>
+  </section>
+
+  <!-- Third case -->
+  <section class="case" data-case="3" aria-label="Third case">
+    <div class="pool" id="pool-3" data-case="3">
+      <div class="pool-head">
+        Universities
+        <span class="count" id="count-3">0 of 12 placed</span>
+      </div>
+      <div class="progress" id="progress-3"><i></i></div>
+      <div class="tile-grid" id="tiles-3"></div>
+    </div>
+
+    <div class="board" id="board-3" data-case="3">
+      <div class="board-head">
+        <h2>Third Case</h2>
+        <div class="board-actions">
+          <button class="btn" data-reset="3" type="button">Reset</button>
+          <button class="btn btn-primary" data-capture="3" type="button">Capture schedule</button>
+        </div>
+      </div>
+      <div class="schedule-grid" id="grid-3" data-case="3"></div>
+    </div>
+  </section>
+
+</div>
+
+<dialog id="capture-dialog">
+  <img id="capture-image" alt="Captured schedule">
+  <div class="dialog-actions">
+    <p class="dialog-note" id="capture-note" hidden>
+      Saving is unavailable here. Right-click or press and hold the image to save it.
+    </p>
+    <button class="btn" id="dialog-close" type="button">Close</button>
+    <button class="btn btn-primary" id="dialog-save" type="button">Save PNG</button>
+  </div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ------------------------------------------------------------
+  // Static data shared by every case.
+  //
+  // Each university points at a fixed image file instead of an
+  // upload. Before you deploy the site, create a "logos" folder
+  // next to this HTML file and drop in files with these exact
+  // names (any of them missing just falls back to the monogram,
+  // so nothing breaks while you're still collecting logos):
+  //
+  //   logos/babes-bolyai.png
+  //   logos/frankfurt-school.png
+  //   logos/hec-montreal.png
+  //   logos/ie-university.png
+  //   logos/mcgill.png
+  //   logos/rsm-erasmus.png
+  //   logos/uts-sydney.png
+  //   logos/alberta.png
+  //   logos/amsterdam.png
+  //   logos/florida.png
+  //   logos/south-carolina.png
+  //   logos/toronto-scarborough.png
+  //
+  // To rename a file or use a different extension (.jpg, .svg...),
+  // just edit the matching "logo" value below.
+  // ------------------------------------------------------------
+  const UNIVERSITIES = [
+    { name: "Babeș-Bolyai University", logo: "logos/babes-bolyai.png" },
+    { name: "Frankfurt School of Finance & Management", logo: "logos/frankfurt-school.png" },
+    { name: "HEC Montréal", logo: "logos/hec-montreal.png" },
+    { name: "IE University", logo: "logos/ie-university.png" },
+    { name: "McGill University", logo: "logos/mcgill.jpg" },
+    { name: "Rotterdam School of Management, Erasmus University", logo: "logos/rsm-erasmus.jpg" },
+    { name: "The University of Technology Sydney", logo: "logos/uts-sydney.png" },
+    { name: "University of Alberta", logo: "logos/alberta.png" },
+    { name: "University of Amsterdam", logo: "logos/amsterdam.jpg" },
+    { name: "University of Florida", logo: "logos/florida.png" },
+    { name: "University of South Carolina", logo: "logos/south-carolina.png" },
+    { name: "University of Toronto Scarborough", logo: "logos/toronto-scarborough.png" }
+  ];
+
+  const SCHEDULE_COLUMNS = [
+    { room: "Room SH1", division: "A" },
+    { room: "Room SH2", division: "B" },
+    { room: "Room SH3", division: "C" },
+    { room: "Innovation Lab", division: "D" }
+  ];
+
+  // First and second case share one set of time slots; the third
+  // case runs earlier in the day, so it gets its own.
+  const SCHEDULE_ROWS = ["14:30", "15:10", "15:50"];
+  const THIRD_CASE_ROWS = ["9:30", "10:10", "10:50"];
+
+  const byId = (id) => document.getElementById(id);
+
+  function initials(name) {
+    return name
+      .split(/\s+/)
+      .filter((word) => /^[A-Za-z]/.test(word))
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  // ------------------------------------------------------------
+  // One "case" = one independent pool + grid.
+  // Each case owns its own tiles, its own placement array, and
+  // its own render/move logic. Nothing here touches another case.
+  // ------------------------------------------------------------
+  function createCase(caseKey, universities, rows) {
+    const poolElement = byId("tiles-" + caseKey);
+    const gridElement = byId("grid-" + caseKey);
+    const countElement = byId("count-" + caseKey);
+    const progressElement = byId("progress-" + caseKey);
+
+    const state = {
+      key: caseKey,
+      tiles: universities.map((u, id) => ({ id, name: u.name, logo: u.logo })),
+      // placement[slotIndex] = tile id, or null if the slot is empty
+      placement: new Array(12).fill(null),
+      selectedTileId: null
+    };
+
+    buildGridSkeleton();
+
+    function buildGridSkeleton() {
+      let html = "<div></div>"; // empty corner cell above the time column
+
+      SCHEDULE_COLUMNS.forEach((column) => {
+        const roomLabel = column.room.replace("Room ", "<small>Room </small>");
+        html +=
+          '<div class="col-header">' +
+          '<div class="room">' + roomLabel + "</div>" +
+          '<div class="division">Division ' + column.division + "</div>" +
+          "</div>";
+      });
+
+      rows.forEach((time, rowIndex) => {
+        html += '<div class="row-time">' + time + "</div>";
+        SCHEDULE_COLUMNS.forEach((column, colIndex) => {
+          const slotIndex = rowIndex * SCHEDULE_COLUMNS.length + colIndex;
+          const slotLabel = column.division + (rowIndex + 1);
+          html +=
+            '<div class="cell" data-slot="' + slotIndex + '" data-case="' + caseKey + '">' +
+            "<b>" + slotLabel + "</b>" +
+            "</div>";
+        });
+      });
+
+      gridElement.innerHTML = html;
+    }
+
+    // Each tile tries to load its static logo file first. If that
+    // file isn't there (not deployed yet, wrong name, etc.) it
+    // falls back to a monogram, so a missing logo never breaks
+    // the layout.
+    function buildTileElement(tile) {
+      const el = document.createElement("div");
+      el.className = "tile" + (state.selectedTileId === tile.id ? " is-selected" : "");
+      el.dataset.tileId = String(tile.id);
+      el.dataset.case = caseKey;
+      el.tabIndex = 0;
+      el.setAttribute("aria-label", tile.name);
+
+      const img = document.createElement("img");
+      img.src = tile.logo;
+      img.alt = tile.name;
+      img.draggable = false;
+      img.addEventListener(
+        "error",
+        () => {
+          el.innerHTML =
+            '<span class="tile-monogram">' + initials(tile.name) + "</span>" +
+            '<span class="tile-label">' + tile.name + "</span>";
+        },
+        { once: true }
+      );
+      el.appendChild(img);
+
+      return el;
+    }
+
+    function render() {
+      // Pool: every tile not currently placed on the grid
+      poolElement.innerHTML = "";
+      const unplacedTiles = state.tiles.filter(
+        (tile) => !state.placement.includes(tile.id)
+      );
+      unplacedTiles.forEach((tile) => {
+        poolElement.appendChild(buildTileElement(tile));
+      });
+      if (unplacedTiles.length === 0) {
+        poolElement.innerHTML = '<div class="empty-note">Every university has a slot.</div>';
+      }
+
+      // Grid: fill each cell from the placement array
+      gridElement.querySelectorAll(".cell").forEach((cellElement) => {
+        const slotIndex = Number(cellElement.dataset.slot);
+        const existingTile = cellElement.querySelector(".tile");
+        if (existingTile) existingTile.remove();
+
+        const tileId = state.placement[slotIndex];
+        cellElement.classList.toggle("is-filled", tileId !== null);
+        if (tileId !== null) {
+          cellElement.appendChild(buildTileElement(state.tiles[tileId]));
+        }
+      });
+
+      const placedCount = state.placement.filter((id) => id !== null).length;
+      countElement.textContent = placedCount + " of 12 placed";
+      progressElement.classList.toggle("done", placedCount === 12);
+      progressElement.firstElementChild.style.width = (placedCount / 12) * 100 + "%";
+    }
+
+    function moveTile(tileId, destination) {
+      const currentSlot = state.placement.indexOf(tileId);
+
+      if (destination === "pool") {
+        if (currentSlot >= 0) state.placement[currentSlot] = null;
+        return;
+      }
+
+      // destination is a slot index: swap with whatever is already there
+      const tileAtDestination = state.placement[destination];
+      if (currentSlot >= 0) state.placement[currentSlot] = tileAtDestination;
+      state.placement[destination] = tileId;
+    }
+
+    function resetPlacement() {
+      state.placement = new Array(12).fill(null);
+      state.selectedTileId = null;
+      render();
+    }
+
+    render();
+
+    return {
+      key: caseKey,
+      state,
+      render,
+      moveTile,
+      resetPlacement
+    };
+  }
+
+  // ------------------------------------------------------------
+  // Build both cases
+  // ------------------------------------------------------------
+  const cases = {
+    "1": createCase("1", UNIVERSITIES, SCHEDULE_ROWS),
+    "2": createCase("2", UNIVERSITIES, SCHEDULE_ROWS),
+    "3": createCase("3", UNIVERSITIES, THIRD_CASE_ROWS)
+  };
+
+  // ------------------------------------------------------------
+  // Drag and drop between slots (pointer events, so it works with
+  // mouse and touch).
+  //
+  // Every draggable tile and every drop target (.cell or .pool)
+  // carries data-case. We only ever drop a tile onto a target that
+  // shares its case, which keeps the two boards independent.
+  // ------------------------------------------------------------
+  let drag = null;       // { caseKey, tileId, originElement, startX, startY, isDragging, ghostElement }
+  let suppressClick = false;
+
+  function findDropTarget(pointerEvent) {
+    const elementUnderPointer = document.elementFromPoint(
+      pointerEvent.clientX,
+      pointerEvent.clientY
+    );
+    if (!elementUnderPointer) return null;
+    return elementUnderPointer.closest(".cell, .pool");
+  }
+
+  function clearDropHighlight() {
+    document.querySelectorAll(".is-drop-target").forEach((el) => {
+      el.classList.remove("is-drop-target");
+    });
+  }
+
+  function endDrag() {
+    if (drag) {
+      if (drag.ghostElement) drag.ghostElement.remove();
+      clearDropHighlight();
+    }
+    drag = null;
+  }
+
+  document.addEventListener("pointerdown", (event) => {
+    if (event.button > 0) return;
+
+    const tileElement = event.target.closest(".tile");
+    if (!tileElement || tileElement.classList.contains("tile-ghost")) return;
+
+    drag = {
+      caseKey: tileElement.dataset.case,
+      tileId: Number(tileElement.dataset.tileId),
+      originElement: tileElement,
+      startX: event.clientX,
+      startY: event.clientY,
+      isDragging: false,
+      ghostElement: null
+    };
+  });
+
+  document.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+
+    if (!drag.isDragging) {
+      const movedDistance = Math.hypot(
+        event.clientX - drag.startX,
+        event.clientY - drag.startY
+      );
+      if (movedDistance < 6) return;
+
+      drag.isDragging = true;
+      const ghost = drag.originElement.cloneNode(true);
+      ghost.classList.add("tile-ghost");
+      ghost.classList.remove("is-selected");
+      ghost.style.width = drag.originElement.offsetWidth + "px";
+      ghost.style.height = drag.originElement.offsetHeight + "px";
+      ghost.style.position = "fixed";
+      document.body.appendChild(ghost);
+      drag.ghostElement = ghost;
+      drag.originElement.classList.add("is-lifted");
+    }
+
+    const ghostHalfWidth = drag.ghostElement.offsetWidth / 2;
+    const ghostHalfHeight = drag.ghostElement.offsetHeight / 2;
+    drag.ghostElement.style.transform =
+      "translate(" + (event.clientX - ghostHalfWidth) + "px, " +
+      (event.clientY - ghostHalfHeight) + "px) rotate(3deg)";
+
+    clearDropHighlight();
+    const dropTarget = findDropTarget(event);
+    if (dropTarget && dropTarget.dataset.case === drag.caseKey) {
+      dropTarget.classList.add("is-drop-target");
+    }
+  });
+
+  document.addEventListener("pointerup", (event) => {
+    if (!drag) return;
+
+    if (drag.isDragging) {
+      const dropTarget = findDropTarget(event);
+      if (dropTarget && dropTarget.dataset.case === drag.caseKey) {
+        const destination = dropTarget.classList.contains("pool")
+          ? "pool"
+          : Number(dropTarget.dataset.slot);
+        cases[drag.caseKey].moveTile(drag.tileId, destination);
+      }
+
+      const finishedCaseKey = drag.caseKey;
+      cases[finishedCaseKey].state.selectedTileId = null;
+
+      // The pointerup that ends a drag would otherwise also fire a
+      // click on the same target; swallow exactly one click for it.
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 0);
+
+      endDrag();
+      cases[finishedCaseKey].render();
+    } else {
+      endDrag();
+    }
+  });
+
+  document.addEventListener("pointercancel", () => {
+    if (!drag) return;
+    const caseKey = drag.caseKey;
+    endDrag();
+    cases[caseKey].render();
+  });
+
+  // ------------------------------------------------------------
+  // Tap-to-place (accessible alternative to dragging):
+  // tap a tile to select it, then tap a cell to place it there,
+  // or tap the pool background to send it back.
+  // ------------------------------------------------------------
+  document.addEventListener("click", (event) => {
+    if (suppressClick) { suppressClick = false; return; }
+    if (event.target.closest(".btn, dialog")) return;
+
+    const tileElement = event.target.closest(".tile");
+    const cellElement = event.target.closest(".cell");
+    const poolElement = event.target.closest(".pool");
+    const caseKey = (tileElement || cellElement || poolElement)?.dataset.case;
+    if (!caseKey) return;
+
+    const activeCase = cases[caseKey];
+
+    if (activeCase.state.selectedTileId !== null && cellElement) {
+      activeCase.moveTile(activeCase.state.selectedTileId, Number(cellElement.dataset.slot));
+      activeCase.state.selectedTileId = null;
+    } else if (tileElement) {
+      const tileId = Number(tileElement.dataset.tileId);
+      activeCase.state.selectedTileId =
+        activeCase.state.selectedTileId === tileId ? null : tileId;
+    } else if (activeCase.state.selectedTileId !== null && poolElement) {
+      activeCase.moveTile(activeCase.state.selectedTileId, "pool");
+      activeCase.state.selectedTileId = null;
+    } else {
+      activeCase.state.selectedTileId = null;
+    }
+
+    activeCase.render();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const focused = document.activeElement;
+    if (focused && (focused.classList.contains("tile") || focused.classList.contains("cell"))) {
+      focused.click();
+    }
+  });
+
+  // ------------------------------------------------------------
+  // Reset buttons (one per case)
+  // ------------------------------------------------------------
+  document.querySelectorAll("[data-reset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      cases[button.dataset.reset].resetPlacement();
+    });
+  });
+
+  // ------------------------------------------------------------
+  // Capture: render the chosen board to a PNG and preview it.
+  // Whatever is shown on the board — monograms or uploaded logo
+  // images — is exactly what gets captured, since html2canvas
+  // reads the live DOM.
+  // ------------------------------------------------------------
+  let lastCapturedBlob = null;
+
+  document.querySelectorAll("[data-capture]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const caseKey = button.dataset.capture;
+      const activeCase = cases[caseKey];
+      const boardElement = byId("board-" + caseKey);
+
+      button.disabled = true;
+      button.textContent = "Capturing...";
+      activeCase.state.selectedTileId = null;
+      activeCase.render();
+
+      try {
+        const canvas = await html2canvas(boardElement, {
+          scale: 2,
+          backgroundColor: getComputedStyle(boardElement).backgroundColor,
+          logging: false
+        });
+        lastCapturedBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+
+        const captureImage = byId("capture-image");
+        if (captureImage.src) URL.revokeObjectURL(captureImage.src);
+        captureImage.src = URL.createObjectURL(lastCapturedBlob);
+
+        byId("capture-note").hidden = true;
+        byId("capture-dialog").dataset.case = caseKey;
+        byId("capture-dialog").showModal();
+      } catch (error) {
+        alert("The capture failed. Try again.");
+      }
+
+      button.disabled = false;
+      button.textContent = "Capture schedule";
+    });
+  });
+
+  byId("dialog-close").addEventListener("click", () => {
+    byId("capture-dialog").close();
+  });
+
+  byId("dialog-save").addEventListener("click", async () => {
+    const caseKey = byId("capture-dialog").dataset.case;
+    const caseLabel = { "1": "first", "2": "second", "3": "third" }[caseKey] || "first";
+    const filename = caseLabel + "-case-schedule.png";
+
+    try {
+      const downloads = await window.claude?.use?.("downloads");
+      if (downloads) {
+        await downloads.save({ filename, data: lastCapturedBlob });
+      } else {
+        byId("capture-note").hidden = false;
+      }
+    } catch (error) {
+      if (!error || error.code !== "declined") {
+        byId("capture-note").hidden = false;
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
+
+</body></html>
